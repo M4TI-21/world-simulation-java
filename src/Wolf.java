@@ -7,6 +7,9 @@ public class Wolf extends Animal {
         world.addLog("Wolf has been created");
     }
 
+    public String getTypeName() {
+        return "Wolf";
+    }
 
     @Override
     public void collision(Organism animal) {
@@ -15,6 +18,10 @@ public class Wolf extends Animal {
     @Override
     public void draw(Graphics2D g2d) {
         g2d.setColor(Color.gray);
-        g2d.fillOval(getX(), getY(), Constants.FIELD_SIZE - 1, Constants.FIELD_SIZE - 1);
+        g2d.fillOval(getX(), getY(), Constants.FIELD_SIZE, Constants.FIELD_SIZE);
+    }
+
+    public Organism copyOrganism(int x, int y){
+        return new Wolf(9, 5, 0, x, y, world);
     }
 }
