@@ -14,6 +14,7 @@ public class Turtle extends Animal {
 
     @Override
     public void action() {
+        savePrevPos();
         List<List<Integer>> neighbouringPositions = findNeighbouringPos(getX(), getY());
         Random random = new Random();
 

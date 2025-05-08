@@ -7,8 +7,12 @@ public class World {
     private JTextArea logArea;
     private GameBoard gameBoard;
     private List<Organism> organisms;
-    public static List<String> logs = new ArrayList<>();
     private static int turnNumber = 1;
+    private Human human;
+    private int keyPressed = 0;
+    private boolean humanMoved = false;
+
+    public static List<String> logs = new ArrayList<>();
 
     public World(JTextArea logArea, GameBoard gameBoard) {
         this.logArea = logArea;
@@ -73,6 +77,10 @@ public class World {
             case "Antelope":
                 newOrganism = new Antelope(0, 0, 0, x, y, this);
                 break;
+            case "Human":
+                newOrganism = new Human(0, 0, 0, x, y, this);
+                this.human = (Human) newOrganism;
+                break;
         }
 
         if (newOrganism != null) {
@@ -136,15 +144,14 @@ public class World {
         });
 
         for (Organism organism : filteredOrganisms) {
-
-            if (organism.getTypeName().equals("Human")) {
-                addLog("Waiting for human movement.");
-                drawWorld();
-            }
-
-            if (organism.checkIfAlive()){
-                organism.action();
-                organism.increaseAge();
+            if (organism.checkIfAlive()) {
+                if (organism.getTypeName().equals("Human")) {
+                    organism.increaseAge();
+                }
+                else {
+                    organism.action();
+                    organism.increaseAge();
+                }
             }
         }
         removeDeadOrganisms();
@@ -154,8 +161,22 @@ public class World {
         addLog("Press 'L' to load saved game.");
         addLog("Press Spacebar to continue.");
 
+        humanMoved = false;
         turnNumber++;
         drawWorld();
+    }
+
+    public void handleKeyPress(int key) {
+        if (!hasHumanMoved() && (key == KeyEvent.VK_UP || key == KeyEvent.VK_DOWN || key == KeyEvent.VK_LEFT || key == KeyEvent.VK_RIGHT)) {
+            if (human != null && human.checkIfAlive()) {
+                human.action(key);
+                humanMoved = true;
+                drawWorld();
+            }
+        }
+        else if (key == KeyEvent.VK_SPACE) {
+            makeTurn();
+        }
     }
 
     public void pushOrganism(Organism organism) {
@@ -178,5 +199,17 @@ public class World {
             }
         }
         return null;
+    }
+
+    public Human getHuman(){
+        return human;
+    }
+
+    public boolean hasHumanMoved() {
+        return humanMoved;
+    }
+
+    public void setHumanMoved(boolean moved) {
+        this.humanMoved = moved;
     }
 }

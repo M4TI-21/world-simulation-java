@@ -7,14 +7,13 @@ public class Frame extends JFrame {
     private JTextArea logArea;
     private World world;
     private GameBoard gameBoard;
-
+    private Human human;
     public Frame() {
-        this.setTitle("World Simulation - Mateusz Hann 203308");
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);   //enable exit button
-        //this.setLocationRelativeTo(null);   //window in the middle
-        this.setResizable(false);  //disable window resizing
-        this.setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);    //window dimensions
-        this.setLayout(new BorderLayout());     //divide frame into parts
+        setTitle("World Simulation - Mateusz Hann 203308");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);   //enable exit button
+        setResizable(false);  //disable window resizing
+        setSize(Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT);    //window dimensions
+        setLayout(new BorderLayout());     //divide frame into parts
 
         //scrollable message console
         logArea = new JTextArea();
@@ -24,25 +23,58 @@ public class Frame extends JFrame {
 
         JScrollPane logConsole = new JScrollPane(logArea);
         logConsole.setPreferredSize(new Dimension(Constants.CONSOLE_WIDTH, Constants.BOARD_HEIGHT));
-        this.add(logConsole, BorderLayout.EAST);
+        add(logConsole, BorderLayout.EAST);
 
         gameBoard = new GameBoard();
-        this.add(gameBoard, BorderLayout.CENTER);
+        add(gameBoard, BorderLayout.CENTER);
+        gameBoard.setFocusable(true);
+        gameBoard.requestFocusInWindow();
 
         world = new World(logArea, gameBoard);
+        human = world.getHuman();
 
         InputMap inputMap = gameBoard.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = gameBoard.getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke("UP"), "moveUp");
+        inputMap.put(KeyStroke.getKeyStroke("DOWN"), "moveDown");
+        inputMap.put(KeyStroke.getKeyStroke("LEFT"), "moveLeft");
+        inputMap.put(KeyStroke.getKeyStroke("RIGHT"), "moveRight");
+
+        actionMap.put("moveUp", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) {
+                world.handleKeyPress(KeyEvent.VK_UP);
+            }
+        });
+        actionMap.put("moveDown", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) {
+                world.handleKeyPress(KeyEvent.VK_DOWN);
+            }
+        });
+        actionMap.put("moveLeft", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) {
+                world.handleKeyPress(KeyEvent.VK_LEFT);
+            }
+        });
+        actionMap.put("moveRight", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) {
+                world.handleKeyPress(KeyEvent.VK_RIGHT);
+            }
+        });
 
         inputMap.put(KeyStroke.getKeyStroke("SPACE"), "nextTurn");
         actionMap.put("nextTurn", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                world.makeTurn();
+                if (world.hasHumanMoved()) {
+                    world.makeTurn();
+                    world.setHumanMoved(false);
+                }
             }
         });
 
-        this.setVisible(true);
+        setFocusable(true);     //allow key press listening
+        setVisible(true);
     }
 
     public World getWorld() {

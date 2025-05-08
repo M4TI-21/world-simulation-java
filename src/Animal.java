@@ -10,6 +10,7 @@ public abstract class Animal extends Organism{
 
     @Override
     public void action() {
+        savePrevPos();
         List<List<Integer>> neighbouringPositions = findNeighbouringPos(getX(), getY());
         Random random = new Random();
 
@@ -44,7 +45,7 @@ public abstract class Animal extends Organism{
                 }
             }
             else{
-                collision(met_organism);
+                this.collision(met_organism);
             }
         }
 

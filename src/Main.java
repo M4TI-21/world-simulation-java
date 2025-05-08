@@ -35,6 +35,8 @@ public class Main {
         world.addOrganism("Antelope");
         world.addOrganism("Antelope");
 
+        world.addOrganism("Human");
+
         world.drawWorld();
     }
 

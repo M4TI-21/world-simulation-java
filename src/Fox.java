@@ -20,7 +20,8 @@ public class Fox extends Animal {
 
     @Override
     public void action() {
-        //fox don't move to a field occupied by stronger organism
+        savePrevPos();
+        //fox won't move to a field occupied by stronger organism
         List<List<Integer>> neighbouringPositions = findNeighbouringPos(getX(), getY());
         List<List<Integer>> safePositions = new ArrayList<>();
 

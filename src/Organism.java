@@ -52,6 +52,11 @@ public abstract class Organism {
         this.y = newY;
     }
 
+    public void savePrevPos() {
+        prevX = x;
+        prevY = y;
+    }
+
     public List<List<Integer>> findNeighbouringPos(int x, int y) {
         List<List<Integer>> neighbouringPositions = new ArrayList<>();
 

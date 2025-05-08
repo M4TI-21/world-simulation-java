@@ -14,6 +14,7 @@ public class Antelope extends Animal {
 
     @Override
     public void action() {
+        savePrevPos();
         List<List<Integer>> neighbouringPositions = new ArrayList<>();
         int x = getX();
         int y = getY();
