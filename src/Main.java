@@ -19,7 +19,6 @@ public class Main {
         world.addOrganism("Hogweed");
         world.addOrganism("Hogweed");
 
-
         world.addOrganism("Sheep");
         world.addOrganism("Sheep");
         world.addOrganism("Sheep");

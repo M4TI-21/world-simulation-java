@@ -8,6 +8,12 @@ public class Hogweed extends Plant {
         world.addLog("Sosnowsky's Hogweed has been created");
     }
 
+    @Override
+    public void draw(Graphics2D g2d) {
+        g2d.setColor(Color.white);
+        g2d.fillRect(getX(), getY(), Constants.FIELD_SIZE, Constants.FIELD_SIZE);
+    }
+
     public String getTypeName() {
         return "Hogweed";
     }
@@ -35,17 +41,25 @@ public class Hogweed extends Plant {
             }
         }
 
+        for (List<Integer> position : neighbouringPositions) {
+            int newX = position.get(0);
+            int newY = position.get(1);
 
+            Organism target = world.getOrganismPosition(newX, newY);
+            boolean isOpponentAnimal = target instanceof Animal;
+
+            if (target != null && isOpponentAnimal) {
+                world.removeOrganism(target);
+                world.addLog(target.getTypeName() + " was killed by Hogweed.");
+            }
+        }
     }
 
     @Override
-    public void collision(Organism animal) {
-    }
-
-    @Override
-    public void draw(Graphics2D g2d) {
-        g2d.setColor(Color.white);
-        g2d.fillRect(getX(), getY(), Constants.FIELD_SIZE, Constants.FIELD_SIZE);
+    public void collision(Organism opponent) {
+        world.removeOrganism(opponent);
+        world.removeOrganism(this);
+        world.addLog(opponent.getTypeName() + " was killed by Hogweed.");
     }
 
     public Organism copyOrganism(int x, int y){

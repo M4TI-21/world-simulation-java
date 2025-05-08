@@ -5,7 +5,7 @@ import java.awt.*;
 public abstract class Organism {
     private int strength, initiative, age, x, y, prevX, prevY;
     protected World world;
-
+    protected boolean isAlive = true;
     public Organism(int strength, int initiative, int age, int x, int y, World world) {
         this.strength = strength;
         this.initiative = initiative;
@@ -39,6 +39,14 @@ public abstract class Organism {
         return age;
     }
 
+    public int getPrevX(){
+        return prevX;
+    }
+
+    public int getPrevY(){
+        return prevY;
+    }
+
     public void setPosition(int newX, int newY) {
         this.x = newX;
         this.y = newY;
@@ -69,6 +77,17 @@ public abstract class Organism {
         this.age += 1;
     }
 
+    public void increaseStrength() {
+        this.strength += 3;
+    }
+
+    boolean checkIfAlive() {
+        return isAlive;
+    }
+
+    void kill() {
+        isAlive = false;
+    }
 
     public abstract void draw(Graphics2D g2d);
     public abstract void action();

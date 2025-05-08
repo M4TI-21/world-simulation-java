@@ -8,7 +8,6 @@ public abstract class Plant extends Organism{
         super(strength, 0, 0, x, y, world);
     }
 
-    public abstract void draw(Graphics2D g2d);
     public void action(){
         List<List<Integer>> neighbouringPositions = findNeighbouringPos(getX(), getY());
         if (neighbouringPositions.isEmpty()){
@@ -30,10 +29,14 @@ public abstract class Plant extends Organism{
                 world.pushOrganism(sowed_plant);
             }
         }
-
     }
+
+    public void collision(Organism opponent) {
+        world.removeOrganism(this);
+        world.addLog(opponent.getTypeName() + " ate " + this.getTypeName());
+    }
+
+    public abstract void draw(Graphics2D g2d);
     public abstract String getTypeName();
     public abstract Organism copyOrganism(int x, int y);
-    public abstract void collision(Organism animal);
-
 }

@@ -7,18 +7,21 @@ public class Belladonna extends Plant {
         world.addLog("Belladonna has been created");
     }
 
+    @Override
+    public void draw(Graphics2D g2d) {
+        g2d.setColor(Color.blue);
+        g2d.fillRect(getX(), getY(), Constants.FIELD_SIZE, Constants.FIELD_SIZE);
+    }
+
     public String getTypeName() {
         return "Belladonna";
     }
 
     @Override
-    public void collision(Organism animal) {
-    }
-
-    @Override
-    public void draw(Graphics2D g2d) {
-        g2d.setColor(Color.blue);
-        g2d.fillRect(getX(), getY(), Constants.FIELD_SIZE, Constants.FIELD_SIZE);
+    public void collision(Organism opponent) {
+        world.removeOrganism(this);
+        world.removeOrganism(this);
+        world.addLog(opponent.getTypeName() + " was killed by Belladonna");
     }
 
     public Organism copyOrganism(int x, int y){

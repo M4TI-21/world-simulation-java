@@ -47,11 +47,88 @@ public class Antelope extends Animal {
         x = newX;
         y = newY;
 
-        setPosition(x, y);
+        Organism met_organism = world.getOrganismPosition(x, y);
+        //breeding
+        if (met_organism != null && met_organism != this){
+            if (met_organism.getTypeName() == this.getTypeName()){
+                neighbouringPositions.remove(position);
+                if (neighbouringPositions.isEmpty()){
+                    world.addLog("No space for new animal");
+                    return;
+                }
+                else{
+                    //add new organism to random neighbouring position
+                    position = random.nextInt(neighbouringPositions.size());
+                    newX = neighbouringPositions.get(position).get(0);
+                    newY = neighbouringPositions.get(position).get(1);
+
+                    Organism new_animal = this.copyOrganism(newX, newY);
+                    world.pushOrganism(new_animal);
+                    return;
+                }
+            }
+            else{
+                collision(met_organism);
+            }
+        }
+
+        if (met_organism == null ||  met_organism.getTypeName() != this.getTypeName()){
+            prevX = x;
+            prevY = y;
+            setPosition(x, y);
+        }
     }
 
     @Override
-    public void collision(Organism animal) {
+    public void collision(Organism opponent){
+        Random random = new Random();
+        boolean escape = random.nextInt(2) == 0;
+        boolean isOpponentAnimal = opponent instanceof Animal;
+
+        if (isOpponentAnimal){
+            if (escape) {
+                world.addLog("Antelope ran away from fight with " + opponent.getTypeName());
+                List<List<Integer>> neighbouringPositions = findNeighbouringPos(getX(), getY());
+
+                int position = random.nextInt(neighbouringPositions.size());
+                int newX = neighbouringPositions.get(position).get(0);
+                int newY = neighbouringPositions.get(position).get(1);
+                setPosition(newX, newY);
+                return;
+            }
+            else {
+                boolean isTurtle = opponent instanceof Turtle;
+                if (isTurtle){
+                    Turtle turtle = (Turtle) opponent;
+                    turtle.collision(this);
+                    return;
+                }
+
+                int thisStrength = this.getStrength();
+                int opponentStrength = opponent.getStrength();
+
+                if (thisStrength >= opponentStrength){
+                    world.removeOrganism(opponent);
+                    world.addLog(this.getTypeName() + " defeated " + opponent.getTypeName());
+                }
+                else{
+                    world.removeOrganism(this);
+                    world.addLog(opponent.getTypeName() + " defeated " + this.getTypeName());
+                }
+            }
+        }
+        else{
+            String opponentTypeName = opponent.getTypeName();
+            if (opponentTypeName.equals("Belladonna") || opponentTypeName.equals("Hogweed")){
+                world.removeOrganism(this);
+                world.removeOrganism(opponent);
+                world.addLog(this.getTypeName() + " was killed by " + opponent.getTypeName());
+            }
+            else{
+                world.removeOrganism(opponent);
+                world.addLog(this.getTypeName() + " ate " + opponent.getTypeName());
+            }
+        }
     }
 
     @Override

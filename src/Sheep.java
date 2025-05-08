@@ -12,10 +12,6 @@ public class Sheep extends Animal {
     }
 
     @Override
-    public void collision(Organism animal) {
-    }
-
-    @Override
     public void draw(Graphics2D g2d) {
         g2d.setColor(Color.white);
         g2d.fillOval(getX(), getY(), Constants.FIELD_SIZE, Constants.FIELD_SIZE);

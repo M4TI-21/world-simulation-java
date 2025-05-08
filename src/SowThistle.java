@@ -38,10 +38,6 @@ public class SowThistle extends Plant {
     }
 
     @Override
-    public void collision(Organism animal) {
-    }
-
-    @Override
     public void draw(Graphics2D g2d) {
         g2d.setColor(Color.yellow);
         g2d.fillRect(getX(), getY(), Constants.FIELD_SIZE, Constants.FIELD_SIZE);

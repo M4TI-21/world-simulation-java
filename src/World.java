@@ -14,8 +14,7 @@ public class World {
         this.logArea = logArea;
         this.gameBoard = gameBoard;
         this.organisms = new ArrayList<>();
-        addLog("World has been created.");
-
+        addLog("World has been created");
     }
 
     //add logs to log list
@@ -118,22 +117,66 @@ public class World {
     public void makeTurn() {
         addLog("----- Turn " + turnNumber + " has started -----");
 
+        //only alive organisms can make turn
         List<Organism> filteredOrganisms = new ArrayList<>();
         for (Organism organism : organisms) {
-            filteredOrganisms.add(organism);
+            if (organism.isAlive){
+                filteredOrganisms.add(organism);
+            }
         }
+
+        //sort order by initiative and age
+        filteredOrganisms.sort((org1, org2) -> {
+            if (org1.getInitiative() != org2.getInitiative()) {
+                return Integer.compare(org2.getInitiative(), org1.getInitiative());
+            }
+            else {
+                return Integer.compare(org2.getAge(), org1.getAge());
+            }
+        });
 
         for (Organism organism : filteredOrganisms) {
 
-            organism.action();
-            organism.increaseAge();
+            if (organism.getTypeName().equals("Human")) {
+                addLog("Waiting for human movement.");
+                drawWorld();
+            }
+
+            if (organism.checkIfAlive()){
+                organism.action();
+                organism.increaseAge();
+            }
         }
+        removeDeadOrganisms();
+
         addLog("----- Turn " + turnNumber + " has ended -----");
+        addLog("Press 'S' to save the game.");
+        addLog("Press 'L' to load saved game.");
+        addLog("Press Spacebar to continue.");
+
         turnNumber++;
         drawWorld();
     }
 
     public void pushOrganism(Organism organism) {
         organisms.add(organism);
+    }
+
+    public void removeOrganism(Organism organism) {
+        organism.kill();
+    }
+
+    public void removeDeadOrganisms() {
+        organisms.removeIf(organism -> !organism.isAlive);
+        drawWorld();
+    }
+
+    public Organism getOrganismPosition(int x, int y) {
+        for (Organism organism : organisms) {
+            if (organism.getX() == x && organism.getY() == y) {
+                return organism;
+            }
+        }
+        return null;
     }
 }
