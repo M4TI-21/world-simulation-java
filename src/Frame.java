@@ -31,6 +31,7 @@ public class Frame extends JFrame {
         gameBoard.requestFocusInWindow();
 
         world = new World(logArea, gameBoard);
+        gameBoard.setWorld(world);
         human = world.getHuman();
 
         InputMap inputMap = gameBoard.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
@@ -73,6 +74,46 @@ public class Frame extends JFrame {
             }
         });
 
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, 0), "activateAbility");
+        actionMap.put("activateAbility", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) {
+                world.handleKeyPress(KeyEvent.VK_A);
+            }
+        });
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_S, 0), "saveGame");
+        actionMap.put("saveGame", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) {
+                world.handleKeyPress(KeyEvent.VK_S);
+            }
+        });
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_L, 0), "loadGame");
+        actionMap.put("loadGame", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) {
+                world.handleKeyPress(KeyEvent.VK_L);
+            }
+        });
+
+        String[] organism_types = {
+                "Hogweed", "Wolf", "Sheep", "Fox", "Turtle", "Antelope",
+                "Grass", "Sow thistle", "Guarana", "Belladonna"
+        };
+
+        //iterative key binding for organism selection
+        for (int i = 0; i <= 9; i++) {
+            final int index = i;
+            inputMap.put(KeyStroke.getKeyStroke(String.valueOf(i)), "select" + i);
+            actionMap.put("select" + i, new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (index < organism_types.length) {
+                        world.selectOrganism(organism_types[index]);
+                    }
+                }
+            });
+        }
+
         setFocusable(true);     //allow key press listening
         setVisible(true);
     }
@@ -84,10 +125,24 @@ public class Frame extends JFrame {
 
 class GameBoard extends JPanel {
     private List<Organism> organisms;
+    private World world;
 
     public GameBoard() {
         this.setBackground(new Color(100, 200, 100));  //background color
         this.setPreferredSize(new Dimension(Constants.BOARD_WIDTH, Constants.BOARD_HEIGHT));
+    }
+
+    public void setWorld(World world) {
+        this.world = world;
+
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int x = e.getX() / Constants.FIELD_SIZE;
+                int y = e.getY() / Constants.FIELD_SIZE;
+                world.addOrganismOnClick(x, y);
+            }
+        });
     }
 
     public void setOrganisms(List<Organism> organisms) {
@@ -100,15 +155,27 @@ class GameBoard extends JPanel {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        g2d.setColor(new Color(10, 100, 10));
-        g2d.setStroke(new BasicStroke(Constants.FIELD_SIZE));
-        g2d.drawRect(0, 0, Constants.BOARD_WIDTH, Constants.BOARD_HEIGHT);
+        //drawing grid
+        g2d.setColor(Color.BLACK);
+        g2d.setStroke(new BasicStroke(1));
+        int cols = Constants.BOARD_WIDTH / Constants.FIELD_SIZE;
+        int rows = Constants.BOARD_HEIGHT / Constants.FIELD_SIZE;
+        for (int i = 0; i <= cols; i++) {
+            int x = i * Constants.FIELD_SIZE;
+            g2d.drawLine(x, 0, x, Constants.BOARD_HEIGHT);
+        }
+        for (int j = 0; j <= rows; j++) {
+            int y = j * Constants.FIELD_SIZE;
+            g2d.drawLine(0, y, Constants.BOARD_WIDTH, y);
+        }
 
+        //drawing organisms
         if (organisms != null) {
-            for (Organism organism : organisms) {
+            for (Organism organism : world.getOrganismsList()) {
                 organism.draw(g2d);
             }
         }
     }
+
 
 }

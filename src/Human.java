@@ -1,9 +1,11 @@
 import java.awt.*;
-import java.awt.event.*;
 import java.util.List;
-import java.util.Random;
+import java.awt.event.*;
 
 public class Human extends Animal {
+    private int abilityActive = 0;
+    private int abilityCooldown = 0;
+
     public Human(int strength, int initiative, int age, int x, int y, World world) {
         super(5, 4, 0, x, y, world);
         world.addLog("Human has been created.");
@@ -31,22 +33,50 @@ public class Human extends Animal {
             return;
         }
 
-        int[] newPos = new int[2];
+        if (key == KeyEvent.VK_A) {
+            if (abilityActive == 0 && abilityCooldown == 0) {
+                abilityActive = 5;
+                abilityCooldown = 5;
+                world.addLog("Human activated special ability!");
+                specialAbility(neighbouringPositions);
+                return;
+            }
+            else{
+                world.addLog("Ability is not ready yet. " + abilityStatus());
+                return;
+            }
+        }
 
+        int[] newPos = new int[2];
         boolean hasMoved = movement(key, newPos);
 
         if (hasMoved) {
             int newX = newPos[0];
             int newY = newPos[1];
 
+            List<List<Integer>> newNeighbours = findNeighbouringPos(newX, newY);
+            specialAbility(newNeighbours);
+
             Organism metOrganism = world.getOrganismPosition(newX, newY);
-            if (metOrganism != null && metOrganism != this) {
+
+            if (abilityActive == 0 && metOrganism != null && metOrganism != this) {
                 if (metOrganism.getTypeName() != this.getTypeName()) {
                     collision(metOrganism);
                 }
             }
+            else if (abilityActive > 0 && metOrganism != null) {
+                world.addLog("Human defeated " + metOrganism.getTypeName());
+                world.removeOrganism(metOrganism);
+            }
 
             setPosition(newX, newY);
+        }
+
+        if (abilityActive > 0) {
+            abilityActive--;
+        }
+        else if (abilityCooldown > 0) {
+            abilityCooldown--;
         }
     }
 
@@ -137,5 +167,56 @@ public class Human extends Animal {
 
     public Organism copyOrganism(int x, int y){
         return new Human(5, 4, 0, x, y, world);
+    }
+
+    public boolean isAbilityActive() {
+        return abilityActive > 0;
+    }
+
+    public int getAbilityActive() {
+        return abilityActive;
+    }
+
+    public void setAbilityActive(int abilityActive) {
+        this.abilityActive = abilityActive;
+    }
+
+    public int getAbilityCooldown() {
+        return abilityCooldown;
+    }
+
+    public void setAbilityCooldown(int abilityCooldown) {
+        this.abilityCooldown = abilityCooldown;
+    }
+
+    //special ability action - purification
+    private void specialAbility(List<List<Integer>> positions) {
+        if (abilityActive > 0) {
+            for (List<Integer> pos : positions) {
+                int px = pos.get(0);
+                int py = pos.get(1);
+
+                Organism target = world.getOrganismPosition(px, py);
+                if (target != null && target != this) {
+                    world.removeOrganism(target);
+                    if (target instanceof Animal) {
+                        world.addLog(target.getTypeName() + " was killed by Human.");
+                    } else {
+                        world.addLog(target.getTypeName() + " was destroyed by Human.");
+                    }
+                }
+            }
+        }
+    }
+
+    //ability status message
+    public String abilityStatus() {
+        if (abilityActive > 0) {
+            return "Ability active for " + abilityActive + " more turns.";
+        } else if (abilityCooldown > 0) {
+            return "Ability available in " + abilityCooldown + " turns.";
+        } else {
+            return "Press 'A' to activate special ability.";
+        }
     }
 }

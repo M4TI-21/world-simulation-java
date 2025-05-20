@@ -9,7 +9,7 @@ public class SowThistle extends Plant {
     }
 
     public String getTypeName() {
-        return "Sow thistle";
+        return "Sow_thistle";
     }
 
     public void action(){
@@ -28,7 +28,7 @@ public class SowThistle extends Plant {
                 int newX = neighbouringPositions.get(position).get(0);
                 int newY = neighbouringPositions.get(position).get(1);
 
-                if (world.isPositionFree(newX, newY)){
+                if (world.getOrganismPosition(newX, newY) == null){
                     Organism sowed_plant = this.copyOrganism(newX, newY);
                     world.pushOrganism(sowed_plant);
                 }

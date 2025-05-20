@@ -139,6 +139,6 @@ public class Antelope extends Animal {
     }
 
     public Organism copyOrganism(int x, int y){
-        return new Guarana(4, 4, 0, x, y, world);
+        return new Antelope(4, 4, 0, x, y, world);
     }
 }

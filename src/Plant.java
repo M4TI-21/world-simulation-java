@@ -24,7 +24,7 @@ public abstract class Plant extends Organism{
             int newX = neighbouringPositions.get(position).get(0);
             int newY = neighbouringPositions.get(position).get(1);
 
-            if (world.isPositionFree(newX, newY)){
+            if (world.getOrganismPosition(newX, newY) == null){
                 Organism sowed_plant = this.copyOrganism(newX, newY);
                 world.pushOrganism(sowed_plant);
             }

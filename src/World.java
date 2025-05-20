@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.util.*;
+import java.io.*;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.*;
 
@@ -11,7 +12,9 @@ public class World {
     private Human human;
     private int keyPressed = 0;
     private boolean humanMoved = false;
+    private boolean isHumanAlive = false;
 
+    public Organism selectedOrganism;
     public static List<String> logs = new ArrayList<>();
 
     public World(JTextArea logArea, GameBoard gameBoard) {
@@ -50,7 +53,7 @@ public class World {
             case "Grass":
                 newOrganism = new Grass(0, 0, 0, x, y, this);
                 break;
-            case "Sow thistle":
+            case "Sow_thistle":
                 newOrganism = new SowThistle(0, 0, 0, x, y, this);
                 break;
             case "Guarana":
@@ -80,6 +83,7 @@ public class World {
             case "Human":
                 newOrganism = new Human(0, 0, 0, x, y, this);
                 this.human = (Human) newOrganism;
+                isHumanAlive = true;
                 break;
         }
 
@@ -87,6 +91,10 @@ public class World {
             organisms.add(newOrganism);
             drawWorld();
         }
+    }
+
+    public List<Organism> getOrganismsList() {
+        return new ArrayList<>(organisms);
     }
 
     public int[] selectPosition() {
@@ -101,20 +109,12 @@ public class World {
             x *= Constants.FIELD_SIZE;
             y *= Constants.FIELD_SIZE;
 
-            isFree = isPositionFree(x, y);
+            isFree = getOrganismPosition(x, y) == null;
         }
 
         return new int[]{x, y};
     }
 
-    public boolean isPositionFree(int x, int y) {
-        for (Organism organism : getOrganisms()) {
-            if (organism.getX() == x && organism.getY() == y) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     //refresh board
     public void drawWorld() {
@@ -146,6 +146,8 @@ public class World {
         for (Organism organism : filteredOrganisms) {
             if (organism.checkIfAlive()) {
                 if (organism.getTypeName().equals("Human")) {
+                    addLog("Waiting for human movement.");
+                    addLog(human.abilityStatus());
                     organism.increaseAge();
                 }
                 else {
@@ -167,7 +169,7 @@ public class World {
     }
 
     public void handleKeyPress(int key) {
-        if (!hasHumanMoved() && (key == KeyEvent.VK_UP || key == KeyEvent.VK_DOWN || key == KeyEvent.VK_LEFT || key == KeyEvent.VK_RIGHT)) {
+        if (!hasHumanMoved() && (key == KeyEvent.VK_UP || key == KeyEvent.VK_DOWN || key == KeyEvent.VK_LEFT || key == KeyEvent.VK_RIGHT || key == KeyEvent.VK_A)) {
             if (human != null && human.checkIfAlive()) {
                 human.action(key);
                 humanMoved = true;
@@ -177,6 +179,12 @@ public class World {
         else if (key == KeyEvent.VK_SPACE) {
             makeTurn();
         }
+        else if (key == KeyEvent.VK_S) {
+            saveGame();
+        }
+        else if (key == KeyEvent.VK_L) {
+            loadGame();
+        }
     }
 
     public void pushOrganism(Organism organism) {
@@ -184,6 +192,13 @@ public class World {
     }
 
     public void removeOrganism(Organism organism) {
+        if (organism instanceof Human) {
+            Human human = (Human) organism;
+            if (human.isAbilityActive()) {
+                return;
+            }
+        }
+
         organism.kill();
     }
 
@@ -211,5 +226,150 @@ public class World {
 
     public void setHumanMoved(boolean moved) {
         this.humanMoved = moved;
+    }
+
+    public void selectOrganism(String type) {
+        for (Organism organism : organisms) {
+            if (organism.getTypeName().equals(type)) {
+                selectedOrganism = organism;
+                addLog("Selected organism: " + type);
+                return;
+            }
+        }
+    }
+
+    public void addOrganismOnClick(int x, int y) {
+        if (selectedOrganism == null) {
+            addLog("No organism selected.");
+            return;
+        }
+        x = x * Constants.FIELD_SIZE;
+        y = y * Constants.FIELD_SIZE;
+        Organism organism = getOrganismPosition(x, y);
+        if (organism != null) {
+            addLog("Field already occupied.");
+            return;
+        }
+        else{
+            Organism new_organism = selectedOrganism.copyOrganism(x, y);
+            pushOrganism(new_organism);
+            addLog("Added " + new_organism.getTypeName() + " at (" + x + ", " + y + ")");
+            drawWorld();
+            return;
+        }
+    }
+
+    public void saveGame() {
+        try (PrintWriter writer = new PrintWriter("save.txt")) {
+            for (Organism org : organisms) {
+                if (org instanceof Human) {
+                    Human human = (Human) org;
+                    writer.printf("%s %d %d %d %d %d %d %d\n",
+                            human.getTypeName(),
+                            human.getStrength(),
+                            human.getInitiative(),
+                            human.getAge(),
+                            human.getX(),
+                            human.getY(),
+                            human.getAbilityActive(),
+                            human.getAbilityCooldown()
+                    );
+                } else {
+                    writer.printf("%s %d %d %d %d %d\n",
+                            org.getTypeName(),
+                            org.getStrength(),
+                            org.getInitiative(),
+                            org.getAge(),
+                            org.getX(),
+                            org.getY()
+                    );
+                }
+            }
+            addLog("Game has been saved.");
+        }
+        catch (IOException e) {
+            addLog("Error while saving game.");
+            e.printStackTrace();
+        }
+    }
+
+    public void loadGame() {
+        File file = new File("save.txt");
+        if (!file.exists()) {
+            addLog("There is no saved game.");
+            return;
+        }
+
+        //Clear current organisms
+        organisms.clear();
+        human = null;
+        try (Scanner scanner = new Scanner(file)) {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine().trim();
+                String[] data = line.split(" ");
+                String typeName = data[0];
+
+                int strength = Integer.parseInt(data[1]);
+                int initiative = Integer.parseInt(data[2]);
+                int age = Integer.parseInt(data[3]);
+                int x = Integer.parseInt(data[4]);
+                int y = Integer.parseInt(data[5]);
+
+                Organism organism = null;
+                switch (typeName) {
+                    case "Sheep":
+                        organism = new Sheep(strength, initiative, age, x, y, this);
+                        break;
+                    case "Wolf":
+                        organism = new Wolf(strength, initiative, age, x, y, this);
+                        break;
+                    case "Fox":
+                        organism = new Fox(strength, initiative, age, x, y, this);
+                        break;
+                    case "Turtle":
+                        organism = new Turtle(strength, initiative, age, x, y, this);
+                        break;
+                    case "Antelope":
+                        organism = new Antelope(strength, initiative, age, x, y, this);
+                        break;
+                    case "Grass":
+                        organism = new Grass(strength, initiative, age, x, y, this);
+                        break;
+                    case "Sow_thistle":
+                        organism = new SowThistle(strength, initiative, age, x, y, this);
+                        break;
+                    case "Guarana":
+                        organism = new Guarana(strength, initiative, age, x, y, this);
+                        break;
+                    case "Belladonna":
+                        organism = new Belladonna(strength, initiative, age, x, y, this);
+                        break;
+                    case "Hogweed":
+                        organism = new Hogweed(strength, initiative, age, x, y, this);
+                        break;
+                    case "Human":
+                        int abilityActive = Integer.parseInt(data[6]);
+                        int abilityCooldown = Integer.parseInt(data[7]);
+                        Human human = new Human(strength, initiative, age, x, y, this);
+                        human.setAbilityActive(abilityActive);
+                        human.setAbilityCooldown(abilityCooldown);
+                        organism = human;
+                        this.human = human;
+                        break;
+                }
+
+                if (organism != null) {
+                    pushOrganism(organism);
+                }
+            }
+
+            this.turnNumber = 1;
+            addLog("Game has been loaded.");
+            drawWorld();
+        }
+        catch (Exception e) {
+            addLog("Error while loading game.");
+            e.printStackTrace();
+        }
     }
 }
